@@ -3,15 +3,9 @@ package com.nexacorp.ai.texttosql.schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
-public class TableSchema {
-
-    private final String tableName;
+public class ColumnSchema {
+    private final String name;
     private final String description;
-
-    private final List<ColumnSchema> columns;
-
 }

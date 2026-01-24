@@ -1,5 +1,6 @@
 package com.nexacorp.ai.texttosql.service;
 
+import com.nexacorp.ai.texttosql.schema.ColumnSchema;
 import com.nexacorp.ai.texttosql.schema.Relationship;
 import com.nexacorp.ai.texttosql.schema.SchemaProvider;
 import com.nexacorp.ai.texttosql.schema.TableSchema;
@@ -49,8 +50,24 @@ public class PromptBuilder {
     }
 
     private String renderTable(TableSchema table) {
-        String columns = String.join(", ", table.getColumns());
-        return "- %s(%s)".formatted(table.getTableName(), columns);
+        String columns = table.getColumns().stream()
+                .map(this::renderColumn)
+                .collect(Collectors.joining("\n"));
+
+        return """
+                Table: %s
+                Description: %s
+                Columns:
+                %s
+                """.formatted(
+                table.getTableName(),
+                table.getDescription(),
+                columns
+        ).trim();
+    }
+
+    private String renderColumn(ColumnSchema column) {
+        return "- %s: %s".formatted(column.getName(), column.getDescription());
     }
 
     private String renderRelationship(Relationship relationship) {

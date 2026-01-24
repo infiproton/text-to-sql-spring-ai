@@ -11,18 +11,27 @@ public class StaticSchemaProvider implements SchemaProvider {
         return List.of(
                 new TableSchema(
                         "departments",
-                        List.of("id", "name", "location")
+                        "Organizational departments within NexaCorp",
+                        List.of(
+                                new ColumnSchema("id", "Unique identifier for the department"),
+                                new ColumnSchema("name", "Department name"),
+                                new ColumnSchema("location", "Primary physical location of the department")
+                        )
                 ),
                 new TableSchema(
                         "employees",
+                        "Employees working at NexaCorp",
                         List.of(
-                                "id",
-                                "department_id",
-                                "first_name",
-                                "last_name",
-                                "role",
-                                "salary",
-                                "status"
+                                new ColumnSchema("id", "Unique identifier for the employee"),
+                                new ColumnSchema("department_id", "Department the employee belongs to"),
+                                new ColumnSchema("first_name", "Employee first name"),
+                                new ColumnSchema("last_name", "Employee last name"),
+                                new ColumnSchema("role", "Job title or role of the employee"),
+                                new ColumnSchema("salary", "Annual salary of the employee"),
+                                new ColumnSchema(
+                                        "status",
+                                        "Employment status. Valid values include ACTIVE and EXITED"
+                                )
                         )
                 )
 
