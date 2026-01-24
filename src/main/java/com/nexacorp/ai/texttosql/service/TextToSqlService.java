@@ -22,6 +22,8 @@ public class TextToSqlService {
     public TextToSqlResponse handle(TextToSqlRequest request) {
 
         String prompt = promptBuilder.buildPrompt(request.getQuestion());
+        log.info("Prompting text to sql request: {}", prompt);
+
         String generatedSql = chatClient.prompt(prompt)
                 .call().content();
         generatedSql = normalizeSql(generatedSql);
