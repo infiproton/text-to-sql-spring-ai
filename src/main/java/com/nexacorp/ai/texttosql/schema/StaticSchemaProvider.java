@@ -49,4 +49,19 @@ public class StaticSchemaProvider implements SchemaProvider {
                 )
         );
     }
+
+    @Override
+    public List<BusinessRule> getBusinessRules() {
+        return List.of(
+                new BusinessRule(
+                        "Unless explicitly requested, consider only employees with status = 'ACTIVE'."
+                ),
+                new BusinessRule(
+                        "A department is considered inactive if it has no ACTIVE employees."
+                ),
+                new BusinessRule(
+                        "Do not assume data that is not present in the schema."
+                )
+        );
+    }
 }
