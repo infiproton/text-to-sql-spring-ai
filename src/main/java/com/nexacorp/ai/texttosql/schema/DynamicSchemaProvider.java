@@ -18,6 +18,8 @@ public class DynamicSchemaProvider implements SchemaProvider {
     @Override
     public List<TableSchema> getTables() {
         Map<String, List<ColumnSchema>> columnsByTable = loadColumns();
+        Map<String, String> tableDescriptions = loadTableDescriptions();
+
         String sql = """
             SELECT table_name
             FROM information_schema.tables
@@ -29,13 +31,35 @@ public class DynamicSchemaProvider implements SchemaProvider {
             String tableName = rs.getString("table_name");
             return new TableSchema(
                     tableName,
-                    null,
+                    tableDescriptions.get(tableName),
                     columnsByTable.getOrDefault(tableName, List.of())
             );
         });
     }
 
+    private Map<String, String> loadTableDescriptions() {
+        String sql = """
+            SELECT c.relname AS table_name, d.description
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            LEFT JOIN pg_description d
+              ON d.objoid = c.oid AND d.objsubid = 0
+            WHERE n.nspname = 'public'
+              AND c.relkind = 'r'
+        """;
+        Map<String, String> result = new HashMap<>();
+        jdbcTemplate.query(sql, rs -> {
+            result.put(
+                    rs.getString("table_name"),
+                    rs.getString("description")
+            );
+        });
+        return result;
+    }
+
     private Map<String, List<ColumnSchema>> loadColumns() {
+        Map<String, String> columnDescriptions = loadColumnDescriptions();
+
         String sql = """
             SELECT table_name, column_name
             FROM information_schema.columns
@@ -44,9 +68,35 @@ public class DynamicSchemaProvider implements SchemaProvider {
 
         Map<String, List<ColumnSchema>> result = new HashMap<>();
         jdbcTemplate.query(sql, rs -> {
+            String tableName = rs.getString("table_name");
+            String columnName = rs.getString("column_name");
+            String key = tableName + "_" + columnName;
             result
                     .computeIfAbsent(rs.getString("table_name"), t -> new ArrayList<>())
-                    .add(new ColumnSchema(rs.getString("column_name"), null));
+                    .add(new ColumnSchema(rs.getString("column_name"),
+                            columnDescriptions.get(key)));
+        });
+        return result;
+    }
+
+    private Map<String, String> loadColumnDescriptions() {
+        String sql = """
+            SELECT
+              c.relname AS table_name,
+              a.attname AS column_name,
+              d.description
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            JOIN pg_attribute a
+              ON a.attrelid = c.oid AND a.attnum > 0
+            LEFT JOIN pg_description d
+              ON d.objoid = c.oid AND d.objsubid = a.attnum
+            WHERE n.nspname = 'public'
+        """;
+        Map<String, String> result = new HashMap<>();
+        jdbcTemplate.query(sql, rs -> {
+            String key = rs.getString("table_name") + "_" + rs.getString("column_name");
+            result.put(key, rs.getString("description"));
         });
         return result;
     }
