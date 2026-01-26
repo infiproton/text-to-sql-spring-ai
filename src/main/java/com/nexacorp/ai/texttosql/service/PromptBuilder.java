@@ -4,6 +4,7 @@ import com.nexacorp.ai.texttosql.schema.ColumnSchema;
 import com.nexacorp.ai.texttosql.schema.Relationship;
 import com.nexacorp.ai.texttosql.schema.SchemaProvider;
 import com.nexacorp.ai.texttosql.schema.TableSchema;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
@@ -13,7 +14,7 @@ public class PromptBuilder {
 
     private final SchemaProvider schemaProvider;
 
-    public PromptBuilder(SchemaProvider schemaProvider) {
+    public PromptBuilder(@Qualifier("dynamicSchemaProvider") SchemaProvider schemaProvider) {
         this.schemaProvider = schemaProvider;
     }
 
