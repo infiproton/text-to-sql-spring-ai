@@ -14,7 +14,7 @@ public class PromptBuilder {
 
     private final SchemaProvider schemaProvider;
 
-    public PromptBuilder(@Qualifier("dynamicSchemaProvider") SchemaProvider schemaProvider) {
+    public PromptBuilder(@Qualifier("cachedSchemaProvider") SchemaProvider schemaProvider) {
         this.schemaProvider = schemaProvider;
     }
 
