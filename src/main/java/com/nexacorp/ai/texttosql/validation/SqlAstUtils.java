@@ -11,6 +11,21 @@ import java.util.Set;
 
 public class SqlAstUtils {
 
+
+    public static Long extractLimit(Select select) {
+
+        Select body = select.getSelectBody();
+
+        if (body instanceof PlainSelect plainSelect) {
+            Limit limit = plainSelect.getLimit();
+            if (limit != null && limit.getRowCount() != null) {
+                return Long.parseLong(limit.getRowCount().toString());
+            }
+        }
+
+        return null;
+    }
+
     public static Set<String> extractTables(Select select) {
         TablesNamesFinder finder = new TablesNamesFinder();
         return new HashSet<>(finder.getTableList((Statement) select));

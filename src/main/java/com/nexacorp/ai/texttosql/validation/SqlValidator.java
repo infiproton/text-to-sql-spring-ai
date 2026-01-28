@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class SqlValidator {
+    private static final long MAX_ALLOWED_LIMIT = 100;
 
     private final SchemaProvider schemaProvider;
     public SqlValidator(@Qualifier("cachedSchemaProvider") SchemaProvider schemaProvider) {
@@ -40,10 +41,29 @@ public class SqlValidator {
             ValidationResult columnCheck = validateColumns(tables, columns);
             if (!columnCheck.isValid()) return columnCheck;
 
+            // Rule 3: Enforce LIMIT clause
+            ValidationResult limitCheck = validateLimit(select);
+            if (!limitCheck.isValid()) return limitCheck;
+
             return ValidationResult.success();
         } catch (JSQLParserException e) {
             return ValidationResult.failure("Invalid SQL syntax. Unable to parse query.");
         }
+    }
+
+    private ValidationResult validateLimit(Select select) {
+        Long limit = SqlAstUtils.extractLimit(select);
+
+        if (limit == null) {
+            return ValidationResult.failure("Query must include a LIMIT clause.");
+        }
+
+        if (limit > MAX_ALLOWED_LIMIT) {
+            return ValidationResult.failure(
+                    "LIMIT exceeds maximum allowed value of " + MAX_ALLOWED_LIMIT
+            );
+        }
+        return ValidationResult.success();
     }
 
     private ValidationResult validateColumns(Set<String> tables, Set<String> columns) {
