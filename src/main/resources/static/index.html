@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Text-to-SQL Demo UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            font-size: 14px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        pre {
+            background: #222;
+            color: #0f0;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        table {
+            border-collapse: collapse;
+            margin-top: 15px;
+            width: 100%;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Spring AI Text-to-SQL Demo</h1>
+
+<label>Ask a question:</label>
+<textarea id="questionInput">Show top 10 employees by salary for each department</textarea>
+<br>
+<button onclick="runQuery()">Run</button>
+
+<h3>Generated SQL</h3>
+<pre id="sqlOutput"></pre>
+
+<div id="errorMessage" class="error"></div>
+
+<h3>Query Results</h3>
+<div id="tableContainer"></div>
+
+<script>
+    async function runQuery() {
+        const question = document.getElementById("questionInput").value;
+        const sqlOutput = document.getElementById("sqlOutput");
+        const errorMessage = document.getElementById("errorMessage");
+        const tableContainer = document.getElementById("tableContainer");
+
+        sqlOutput.textContent = "";
+        errorMessage.textContent = "";
+        tableContainer.innerHTML = "";
+
+        try {
+            const response = await fetch("http://localhost:8080/api/text-to-sql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ question: question })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                errorMessage.textContent = data.message || "Unknown error occurred";
+                return;
+            }
+
+            sqlOutput.textContent = data.generatedSql;
+
+            if (data.rows && data.rows.length > 0) {
+                renderTable(data.rows);
+            } else {
+                tableContainer.innerHTML = "<p>No rows returned.</p>";
+            }
+
+        } catch (err) {
+            errorMessage.textContent = "Failed to connect to backend: " + err.message;
+        }
+    }
+
+    function renderTable(rows) {
+        const tableContainer = document.getElementById("tableContainer");
+
+        const table = document.createElement("table");
+        const headerRow = document.createElement("tr");
+
+        const columns = Object.keys(rows[0]);
+
+        columns.forEach(col => {
+            const th = document.createElement("th");
+            th.textContent = col;
+            headerRow.appendChild(th);
+        });
+
+        table.appendChild(headerRow);
+
+        rows.forEach(row => {
+            const tr = document.createElement("tr");
+            columns.forEach(col => {
+                const td = document.createElement("td");
+                td.textContent = row[col];
+                tr.appendChild(td);
+            });
+            table.appendChild(tr);
+        });
+
+        tableContainer.appendChild(table);
+    }
+</script>
+
+</body>
+</html>
